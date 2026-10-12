@@ -223,7 +223,7 @@
 
     .footer-actions {
       padding: 0 1.25rem 1.25rem;
-      display: none;
+      display: block;
     }
 
     .footer-actions.visible {
@@ -288,6 +288,7 @@
 
       <div class="footer-actions" id="footer-actions">
         <button type="button" class="restart-btn" id="restart-btn">Restart Game</button>
+        <button type="button" class="choice-btn" id="potion-shop-btn">Potion Shop</button>
       </div>
     </main>
   </div>
@@ -436,6 +437,7 @@
 
     let health = INITIAL_HEALTH;
     let hasTreasure = false;
+    let coins = 1;
     let currentSceneId = START_SCENE;
     let gameOver = false;
 
@@ -465,11 +467,20 @@
     }
 
     function renderTreasure() {
-      treasureDisplayEl.classList.toggle("has-treasure", hasTreasure);
-      treasureDisplayEl.setAttribute(
-        "aria-label",
-        hasTreasure ? "Treasure acquired" : "No treasure"
-      );
+      const hasCoin = coins > 0;
+      treasureDisplayEl.classList.toggle("has-treasure", hasCoin);
+      treasureDisplayEl.innerHTML = "";
+      const icon = document.createElement("span");
+      icon.className = "treasure-icon";
+      if (hasCoin) {
+        icon.classList.add("has-treasure");
+      }
+      icon.setAttribute("aria-label", hasCoin ? `${coins} coin${coins > 1 ? "s" : ""}` : "No treasure");
+      const countSpan = document.createElement("span");
+      countSpan.style.cssText = "position: absolute; top: 2px; right: 2px; background: var(--gold); color: var(--bg-deep); border-radius: 2px; padding: 0 3px; font-size: 0.7rem; min-width: 14px;";
+      countSpan.textContent = coins;
+      icon.appendChild(countSpan);
+      treasureDisplayEl.appendChild(icon);
     }
 
     function renderScene(id) {
@@ -554,11 +565,29 @@
     function restartGame() {
       health = INITIAL_HEALTH;
       hasTreasure = false;
+      coins = 1;
       gameOver = false;
       renderScene(START_SCENE);
     }
 
-    restartBtn.addEventListener("click", restartGame);
+restartBtn.addEventListener("click", restartGame);
+
+    const potionShopBtn = document.getElementById("potion-shop-btn");
+    potionShopBtn.addEventListener("click", () => {
+      if (gameOver) return;
+      if (coins <= 0) {
+        alert("You cannot afford a potion. You have no coins.");
+        return;
+      }
+      if (health >= INITIAL_HEALTH) {
+        alert("Your health is already full.");
+        return;
+      }
+      coins--;
+      health = Math.min(INITIAL_HEALTH, health + 1);
+      renderHealth();
+      renderTreasure();
+    });
 
     // Self-check: verify all choice next IDs exist (or special resolvers)
     (function validateScenes() {
